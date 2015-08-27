@@ -111,10 +111,15 @@
                         "LoadBalancerPort" : "80",
                         "InstancePort" : "80",
                         "Protocol" : "HTTP"
+                    },
+                    {
+                        "LoadBalancerPort" : "9200",
+                        "InstancePort" : "9200",
+                        "Protocol" : "HTTP"
                     }
                 ],
                 "HealthCheck" : {
-                    "Target" : "TCP:80",
+                    "Target" : "HTTP:9200/",
                     "HealthyThreshold" : "2",
                     "UnhealthyThreshold" : "8",
                     "Interval" : "30",
@@ -202,8 +207,10 @@
                         "limits": {
                           "nofile": 128000
                         },
+                        "pid_path": "/var/run",
                         "path": {
-                            "data": "/mnt/elasticsearch-data"
+                            "data": "/mnt/elasticsearch-data",
+                            "logs": "/var/log/elasticsearch"
                         },
                         "cloud": {
                             "aws": {
