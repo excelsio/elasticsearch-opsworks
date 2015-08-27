@@ -65,6 +65,16 @@
             "Type": "String"
         },
 
+        "ElasticSnapshotBucket": {
+            "Description": "The S3 bucket for storing Elastic snapshots",
+            "Type": "String"
+        },
+
+        "ElasticSnapshotPrefix": {
+            "Description": "The S3 path prefix used for storing Elastic snapshots",
+            "Type": "String"
+        },
+
         "VpcSubnets": {
             "Description": "The list of externally-created subnets in our VPC.",
             "Type": "CommaDelimitedList"
@@ -219,6 +229,12 @@
                             "node": {
                               "auto_attributes": true
                             }
+                        },
+                        "s3_snapshot": {
+                          "bucket": { "Ref": "ElasticSnapshotBucket" },
+                          "region": { "Ref": "AwsRegion" },
+                          "base_path": { "Ref": "ElasticSnapshotPrefix" },
+                          "server_side_encryption": true
                         },
                         "custom_config": {
                             "cluster.routing.allocation.awareness.attributes": "rack_id",

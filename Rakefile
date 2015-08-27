@@ -168,6 +168,8 @@ task :provision do
     #"SearchDomainName" => get_required("SEARCH_DOMAIN_NAME"),
     "AwsRegion" => get_required("AWS_REGION"),
     "VpcSubnets" => get_required("VPC_SUBNETS"),
+    "ElasticSnapshotBucket" => get_required("ELASTIC_SNAPSHOT_BUCKET"),
+    "ElasticSnapshotPrefix" => get_required("ELASTIC_SNAPSHOT_PREFIX"),
 
     "SshKeyName" => ENV["SSH_KEY_NAME"] || "elasticsearch",
     "SearchUser" => ENV["SEARCH_USER"] || "elasticsearch",
