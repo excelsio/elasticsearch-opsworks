@@ -233,7 +233,7 @@
                     "BerkshelfVersion": "3.1.3",
                     "ManageBerkshelf": true
                 },
-                "DefaultOs": "Amazon Linux 2014.09",
+                "DefaultOs": "Amazon Linux 2015.03",
                 "DefaultRootDeviceType": "ebs",
                 "DefaultSshKeyName": { "Ref": "SshKeyName" },
                 "UseCustomCookbooks": true,
