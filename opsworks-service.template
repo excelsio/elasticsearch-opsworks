@@ -30,11 +30,6 @@
             "Type": "CommaDelimitedList"
         },
 
-        "SSLCertificateName": {
-            "Description": "The SSL certificate.",
-            "Type": "String"
-        },
-
         "InstanceCount": {
             "Description": "Number of nodes to spin up in the cluster. This also configures the `expected_nodes` setting in ElasticSearch, which serves as a hint when the cluster considers shard reallocation.",
             "Type": "String"
@@ -60,19 +55,19 @@
             "Type": "String"
         },
 
-        "Route53ZoneName": {
-            "Description": "Route53 zone under which to setup the DNS record.",
-            "Type": "String"
-        },
-
-        "SearchDomainName": {
-            "Description": "Domain name to register for the cluster under Route53.",
-            "Type": "String"
-        },
-
         "SshKeyName": {
             "Description": "SSH key name for EC2 instances.",
             "Type": "String"
+        },
+
+        "AwsRegion": {
+            "Description": "AWS Region.",
+            "Type": "String"
+        },
+
+        "VpcSubnets": {
+            "Description": "The list of externally-created subnets in our VPC.",
+            "Type": "CommaDelimitedList"
         },
 
         "PaperTrailHost": {
@@ -109,15 +104,13 @@
         "LoadBalancer" : {
             "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
             "Properties" : {
-                "AvailabilityZones" : { "Fn::GetAZs" : "" },
+                "Subnets" : { "Ref": "VpcSubnets" },
+                "Scheme": "internal",
                 "Listeners" : [
                     {
-                        "LoadBalancerPort" : "443",
+                        "LoadBalancerPort" : "80",
                         "InstancePort" : "80",
-                        "Protocol" : "HTTPS",
-                        "SSLCertificateId": {
-                            "Fn::Join": ["", ["arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":server-certificate/", { "Ref" : "SSLCertificateName" }]]
-                        }
+                        "Protocol" : "HTTP"
                     }
                 ],
                 "HealthCheck" : {
@@ -130,17 +123,6 @@
             }
         },
 
-
-        "DNSRecord": {
-            "Type" : "AWS::Route53::RecordSet",
-            "Properties" : {
-                "HostedZoneName" : {"Ref": "Route53ZoneName"},
-                "Type" : "CNAME",
-                "Name" : { "Ref": "SearchDomainName"},
-                "ResourceRecords" : [ {"Fn::GetAtt":["LoadBalancer","DNSName"]}],
-                "TTL" : "30"
-            }
-        },
 
         "ELBAttachment" : {
             "Type" : "AWS::OpsWorks::ElasticLoadBalancerAttachment",
@@ -180,7 +162,8 @@
                         "plugins" : {
                             "elasticsearch/elasticsearch-cloud-aws": {
                                 "version": { "Ref": "ElasticSearchAWSCloudPluginVersion" }
-                            }
+                            },
+                            "royrusso/elasticsearch-HQ": {}
                         },
                         "nginx": {
                             "users": [{
@@ -194,7 +177,9 @@
                             "name": { "Ref" : "ClusterName" }
                         },
                         "gateway": {
-                            "expected_nodes": { "Ref": "InstanceCount" }
+                            "expected_nodes": { "Ref": "InstanceCount" },
+                            "recover_after_time": "60s",
+                            "recover_after_nodes": { "Ref": "MinMasterNodes" }
                         },
                         "discovery": {
                             "type": "ec2",
@@ -214,12 +199,18 @@
                                 }
                             }
                         },
+                        "limits": {
+                          "nofile": 128000
+                        },
                         "path": {
                             "data": "/mnt/elasticsearch-data"
                         },
                         "cloud": {
                             "aws": {
-                                "region": "us-west-1"
+                                "region": { "Ref": "AwsRegion" }
+                            },
+                            "node": {
+                              "auto_attributes": true
                             }
                         },
                         "custom_config": {
@@ -306,14 +297,15 @@
                 "CustomRecipes": {
                     "Setup": { "Ref": "RecipeList" }
                 },
-                "EnableAutoHealing": false,
+                "EnableAutoHealing": true,
                 "AutoAssignElasticIps": false,
                 "AutoAssignPublicIps": true,
                 "VolumeConfigurations": [
                     {
                         "MountPoint": "/mnt/elasticsearch-data",
                         "NumberOfDisks": 1,
-                        "Size": 100
+                        "Size": 512,
+                        "VolumeType": "gp2"
                     }
                 ],
                 "CustomSecurityGroupIds": [

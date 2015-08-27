@@ -11,10 +11,8 @@ This has not been tested with other versions. YMMV.
 
 Please setup the following dependencies in your AWS region:
 
-* SSL certificate
 * An SSH key pair, defaults to a keypair named "elasticsearch" if not specified
 * A domain name for accessing the elasticsearch cluster
-* A Route53 zone for the domain
 * The default `aws-opsworks-service-role` and `aws-opsworks-ec2-role` need to exist before provisioning. OpsWorks should automatically create these roles when you add your first stack through the OpsWorks console. See http://docs.aws.amazon.com/opsworks/latest/userguide/gettingstarted-simple-stack.html and http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-appsrole.html for details.
 
 ## Setup environment

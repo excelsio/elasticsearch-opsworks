@@ -3,6 +3,7 @@
 AWS_ACCESS_KEY_ID=<your access key id>
 AWS_SECRET_ACCESS_KEY=<your key secret>
 AWS_REGION=<your AWS region>
+VPC_SUBNETS="" # csv of VPC subnets
 
 # This variable will namespace your AWS resources.
 ENVIRONMENT=<env name>
@@ -20,19 +21,19 @@ SEARCH_PASSWORD=password
 
 # Number of nodes in your cluster, defaults to 2 if you do not specify
 INSTANCE_COUNT=2
-
-
-# To access your elastic search server through https instead of http
-SSL_CERTIFICATE_NAME=<your aws ssl cert name>
+INSTANCE_TYPE=c3.large
 
 # You need to create an SSH key pair in your AWS region
 SSH_KEY_NAME=elasticsearch
 
+# To access your elastic search server through https instead of http
+#SSL_CERTIFICATE_NAME=<your aws ssl cert name>
+
 # The CloudFormation stack will need the following 2 variables to give the elasticsearch cluster public access
-ROUTE53_ZONE_NAME=<your aws Route 53 zone>.
+#ROUTE53_ZONE_NAME=<your aws Route 53 zone>.
 
 # example: search.es.com
-SEARCH_DOMAIN_NAME=<your search domain name>
+#SEARCH_DOMAIN_NAME=<your search domain name>
 
 # If you would like to log to PaperTrail, uncomment this setting and configure the endpoint here (hostame:port).
 # PAPERTRAIL_ENDPOINT=logs.papertrailapp.com:<your-port>

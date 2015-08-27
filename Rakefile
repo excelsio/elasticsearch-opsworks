@@ -163,9 +163,11 @@ task :provision do
   cf_stack = cfm.stacks[stack_name]
 
   params = {
-    "SSLCertificateName" => get_required("SSL_CERTIFICATE_NAME"),
-    "Route53ZoneName" => get_required("ROUTE53_ZONE_NAME"),
-    "SearchDomainName" => get_required("SEARCH_DOMAIN_NAME"),
+    #"SSLCertificateName" => get_required("SSL_CERTIFICATE_NAME"),
+    #"Route53ZoneName" => get_required("ROUTE53_ZONE_NAME"),
+    #"SearchDomainName" => get_required("SEARCH_DOMAIN_NAME"),
+    "AwsRegion" => get_required("AWS_REGION"),
+    "VpcSubnets" => get_required("VPC_SUBNETS"),
 
     "SshKeyName" => ENV["SSH_KEY_NAME"] || "elasticsearch",
     "SearchUser" => ENV["SEARCH_USER"] || "elasticsearch",
