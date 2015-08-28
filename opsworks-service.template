@@ -362,7 +362,7 @@
                 "Type": "custom",
                 "Shortname": "search_crons",
                 "CustomRecipes": {
-                    "Setup": { "Ref": "CronRecipeList" }
+                    "Configure": { "Ref": "CronRecipeList" }
                 },
                 "EnableAutoHealing": true,
                 "AutoAssignElasticIps": false,
