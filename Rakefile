@@ -15,6 +15,9 @@ DEFAULT_RECIPES = [
   "layer-custom::esmonit",
   "layer-custom::cloudwatch-custom"
 ].join(",")
+DEFAULT_CRON_RECIPES = [
+  "layer-custom::s3-snapshots"
+].join(",")
 
 def opsworks
   AWS::OpsWorks::Client.new({:region => 'us-east-1'})
@@ -90,18 +93,19 @@ end
 
 def create_instance(stack_id, layer_id, az)
   opsworks.create_instance({:stack_id => stack_id,
-                            :layer_ids => [layer_id],
+                            :layer_ids => Array(layer_id),
                             :instance_type => ENV['INSTANCE_TYPE'] || 'c3.large',
                             :install_updates_on_boot => !ENV['SKIP_INSTANCE_PACKAGE_UPDATES'],
                             :availability_zone => az})
 end
 
-def update_instances(stack_id, layer_id, count)
+def update_instances(stack_id, layer_id, cron_layer_id, count)
   azs = all_availability_zones
   existing_instances = get_all_instances(layer_id)
   count_to_create = count - existing_instances.size
   new_instances = (1..count_to_create).map do |i|
-    instance = create_instance(stack_id, layer_id, azs[(existing_instances.size + i) % azs.size])
+    layers = i == 1 ? [layer_id, cron_layer_id] : [layer_id]
+    instance = create_instance(stack_id, layers, azs[(existing_instances.size + i) % azs.size])
     puts "Created instance, id: #{instance[:instance_id]}, starting the instance now."
     opsworks.start_instance(:instance_id => instance[:instance_id])
     instance
@@ -113,14 +117,15 @@ def update_instances(stack_id, layer_id, count)
 
   puts "Replacing existing instances.." if existing_instances.size > 0
 
-  existing_instances.each do |instance|
+  existing_instances.each_with_index do |instance, idx|
     puts "Stopping instance #{instance[:hostname]}, id: #{instance[:instance_id]}"
     opsworks.stop_instance({:instance_id => instance[:instance_id]})
     wait_for_instance(instance[:instance_id], "stopped")
     ebs_volume_ids = detach_ebs_volumes(instance[:instance_id])
 
     puts "Creating replacement instance"
-    replacement = create_instance(stack_id, layer_id, instance[:availability_zone])
+    layers = idx == 0 ? [layer_id, cron_layer_id] : [layer_id]
+    replacement = create_instance(stack_id, layers, instance[:availability_zone])
     attach_ebs_volumes(replacement[:instance_id], ebs_volume_ids)
 
     puts "Starting new instance, id: #{replacement[:instance_id]}"
@@ -177,7 +182,8 @@ task :provision do
     "InstanceCount" => instance_count.to_s,
     "MinMasterNodes" => min_master_node_count(instance_count).to_s,
     "ClusterName" => "#{environment}-search-cluster",
-    "RecipeList" => DEFAULT_RECIPES
+    "RecipeList" => DEFAULT_RECIPES,
+    "CronRecipeList" => DEFAULT_CRON_RECIPES,
   }
 
   if ENV["PAPERTRAIL_ENDPOINT"].to_s =~ /[^\:]+:[\d]+/
@@ -212,8 +218,9 @@ task :provision do
   unless ENV["SKIP_INSTANCE_UPDATE"] == "true"
     stack_id = cf_query_output(cf_stack, "StackId")
     layer_id = cf_query_output(cf_stack, "LayerId")
+    cron_layer_id = cf_query_output(cf_stack, "CronLayerId")
 
-    update_instances(stack_id, layer_id, instance_count)
+    update_instances(stack_id, layer_id, cron_layer_id, instance_count)
   end
 end
 

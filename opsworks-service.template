@@ -30,6 +30,11 @@
             "Type": "CommaDelimitedList"
         },
 
+        "CronRecipeList": {
+            "Description": "The list of cookbooks/recipes for the cluster's cron job layer.",
+            "Type": "CommaDelimitedList"
+        },
+
         "InstanceCount": {
             "Description": "Number of nodes to spin up in the cluster. This also configures the `expected_nodes` setting in ElasticSearch, which serves as a hint when the cluster considers shard reallocation.",
             "Type": "String"
@@ -105,6 +110,11 @@
         "LayerId": {
             "Description": "opsworks search layer id ",
             "Value": { "Ref": "SearchLayer"}
+        },
+
+        "CronLayerId": {
+            "Description": "opsworks search cron layer id ",
+            "Value": { "Ref": "SearchCronLayer"}
         }
 
     },
@@ -330,6 +340,34 @@
                         "Size": 512,
                         "VolumeType": "gp2"
                     }
+                ],
+                "CustomSecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "SearchSecurityGroup",
+                            "GroupId"
+                        ]
+                    }
+                ]
+            }
+        },
+
+        "SearchCronLayer": {
+            "Type": "AWS::OpsWorks::Layer",
+            "Properties": {
+                "StackId": {
+                    "Ref": "SearchStack"
+                },
+                "Name": "Search Crons",
+                "Type": "custom",
+                "Shortname": "search_crons",
+                "CustomRecipes": {
+                    "Setup": { "Ref": "CronRecipeList" }
+                },
+                "EnableAutoHealing": true,
+                "AutoAssignElasticIps": false,
+                "AutoAssignPublicIps": true,
+                "VolumeConfigurations": [
                 ],
                 "CustomSecurityGroupIds": [
                     {
